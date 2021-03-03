@@ -70,4 +70,8 @@ public class UserDao {
             return null;
         }
     }
+
+    public void updateUserSignOutAt(final UserAuthTokenEntity updateUserSignOutAt) {
+        entityManager.merge(updateUserSignOutAt);
+    }
 }
