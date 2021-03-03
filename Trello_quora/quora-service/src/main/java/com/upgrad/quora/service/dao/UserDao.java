@@ -74,4 +74,16 @@ public class UserDao {
     public void updateUserSignOutAt(final UserAuthTokenEntity updateUserSignOutAt) {
         entityManager.merge(updateUserSignOutAt);
     }
+
+    public UserEntity getUserProfile(final String userUuid) {
+        try {
+            return entityManager
+                    .createNamedQuery("userByUuid", UserEntity.class)
+                    .setParameter("uuid", userUuid)
+                    .getSingleResult();
+        } catch (NoResultException nre) {
+            return null;
+        }
+    }
+
 }
