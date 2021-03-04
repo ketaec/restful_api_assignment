@@ -1,5 +1,6 @@
 package com.upgrad.quora.api.controller;
 
+import com.upgrad.quora.api.model.QuestionDetailsResponse;
 import com.upgrad.quora.api.model.QuestionRequest;
 import com.upgrad.quora.api.model.QuestionResponse;
 import com.upgrad.quora.service.business.QuestionBusinessService;
@@ -45,5 +46,27 @@ public class QuestionController {
         final QuestionEntity createdQuestionEntity = questionBusinessService.createQuestion(questionEntity, authorization);
         QuestionResponse questionResponse = new QuestionResponse().id(createdQuestionEntity.getUuid()).status("QUESTION CREATED");
         return new ResponseEntity<QuestionResponse>(questionResponse, HttpStatus.CREATED);
+    }
+
+    @RequestMapping(
+            method = RequestMethod.GET,
+            path = "/question/all",
+            produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
+    public ResponseEntity<List<QuestionDetailsResponse>> getAllQuestions(
+            @RequestHeader("authorization") final String authorization)
+            throws AuthorizationFailedException {
+
+        // Get all questions
+        List<QuestionEntity> allQuestions = questionBusinessService.getAllQuestions(authorization);
+
+        // Create response
+        List<QuestionDetailsResponse> allQuestionDetailsResponses = new ArrayList<QuestionDetailsResponse>();
+
+        for (int i = 0; i < allQuestions.size(); i++) {
+            QuestionDetailsResponse questionDetailsResponse = new QuestionDetailsResponse().content(allQuestions.get(i).getContent()).id(allQuestions.get(i).getUuid());
+            allQuestionDetailsResponses.add(questionDetailsResponse);
+        }
+
+        return new ResponseEntity<List<QuestionDetailsResponse>>(allQuestionDetailsResponses, HttpStatus.OK);
     }
 }
