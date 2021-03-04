@@ -86,4 +86,9 @@ public class UserDao {
         }
     }
 
+    public void deleteUser(final String userUuid) {
+        UserEntity userEntity = getUserByUuid(userUuid);
+        entityManager.remove(userEntity);
+    }
+
 }
