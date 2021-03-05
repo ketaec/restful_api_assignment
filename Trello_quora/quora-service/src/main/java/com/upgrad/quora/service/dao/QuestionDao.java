@@ -38,4 +38,17 @@ public class QuestionDao {
     public QuestionEntity editQuestionContent(final QuestionEntity questionEntity) {
         return entityManager.merge(questionEntity);
     }
+
+    public void userQuestionDelete(final String uuid) {
+        QuestionEntity questionEntity = getQuestionByUuid(uuid);
+        entityManager.remove(questionEntity);
+    }
+
+    public List<QuestionEntity> getAllQuestionsByUser(final String uuid) {
+        try {
+            return entityManager.createNamedQuery("questionByUserId", QuestionEntity.class).setParameter("uuid", uuid).getResultList();
+        } catch (NoResultException nre) {
+            return null;
+        }
+    }
 }
