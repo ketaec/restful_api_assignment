@@ -18,6 +18,7 @@ public class CommonController {
     @Autowired
     private CommonBusinessService commonBusinessService;
 
+    // API endpoint to get user profile using uuid
     @RequestMapping(
             method = RequestMethod.GET,
             path = "/userprofile/{userId}",
@@ -35,6 +36,7 @@ public class CommonController {
             userEntity = commonBusinessService.getUserProfile(userUuid, authorization);
         }
 
+        // creating user detail response
         UserDetailsResponse userDetailsResponse =
                 new UserDetailsResponse()
                         .firstName(userEntity.getFirstName())

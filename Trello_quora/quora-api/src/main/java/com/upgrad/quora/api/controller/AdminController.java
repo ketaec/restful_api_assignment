@@ -26,7 +26,13 @@ public class AdminController {
             @RequestHeader("authorization") final String authorization)
             throws UserNotFoundException, AuthorizationFailedException {
 
-        adminBusinessService.userDelete(userId, authorization);
+        String bearerToken;
+        try {
+            bearerToken = authorization.split("Bearer ")[1];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            bearerToken = authorization;
+        }
+        adminBusinessService.userDelete(userId, bearerToken);
         UserDeleteResponse userDeleteResponse = new UserDeleteResponse().id(userId).status("USER SUCCESSFULLY DELETED");
         return new ResponseEntity<UserDeleteResponse>(userDeleteResponse, HttpStatus.OK);
     }

@@ -100,7 +100,13 @@ public class UserController {
     public ResponseEntity<SignoutResponse> signout(@RequestHeader("authorization") final String authorization)
             throws SignOutRestrictedException {
 
-        UserAuthTokenEntity userAuthEntity = userBusinessService.signout(authorization);
+        UserAuthTokenEntity userAuthEntity;
+        try {
+            String[] bearerAccessToken = authorization.split("Bearer ");
+            userAuthEntity = userBusinessService.signout(bearerAccessToken[1]);
+        } catch(ArrayIndexOutOfBoundsException are) {
+            userAuthEntity = userBusinessService.signout(authorization);
+        }
 
         UserEntity userEntity = userAuthEntity.getUser();
         SignoutResponse signoutResponse = new SignoutResponse().id(userEntity.getUuid()).message("SIGNED OUT SUCCESSFULLY");
