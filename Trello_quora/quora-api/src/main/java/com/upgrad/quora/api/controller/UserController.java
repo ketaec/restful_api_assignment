@@ -30,12 +30,18 @@ public class UserController {
     @Autowired
     private UserBusinessService userBusinessService;
 
+    /**
+     * User signup endpoint
+     * @param signupUserRequest - it has new signup user details
+     * @return ResponseEntity - with userResponse and status
+     */
     @RequestMapping(
             method = RequestMethod.POST,
             path = "/user/signup",
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<SignupUserResponse> signup(final SignupUserRequest signupUserRequest) throws SignUpRestrictedException {
+    public ResponseEntity<SignupUserResponse> signup(final SignupUserRequest signupUserRequest)
+            throws SignUpRestrictedException {
         final UserEntity userEntity = new UserEntity();
         userEntity.setUuid(UUID.randomUUID().toString());
         userEntity.setFirstName(signupUserRequest.getFirstName());
@@ -49,51 +55,54 @@ public class UserController {
         userEntity.setAboutMe(signupUserRequest.getAboutMe());
         userEntity.setRole("nonadmin");
 
+        // to call user signup business logic
         final UserEntity createdUserEntity = userBusinessService.signup(userEntity);
-        SignupUserResponse userResponse = new SignupUserResponse().id(createdUserEntity.getUuid()).status("USER SUCCESSFULLY REGISTERED");
+        SignupUserResponse userResponse =
+                new SignupUserResponse().id(createdUserEntity.getUuid()).status("USER SUCCESSFULLY REGISTERED");
         return new ResponseEntity<SignupUserResponse>(userResponse, HttpStatus.CREATED);
     }
 
+    /**
+     * User signin endpoint
+     * @param authorization - encoded username and password for signin
+     * @return ResponseEntity - signin response with access token header
+     */
     @RequestMapping(
             method = RequestMethod.POST,
             path = "/user/signin",
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<SigninResponse> signin(
-            @RequestHeader("authorization") final String authorization)
+    public ResponseEntity<SigninResponse> signin(@RequestHeader("authorization") final String authorization)
             throws AuthenticationFailedException {
         byte[] decode = Base64.getDecoder().decode(authorization.split("Basic ")[1]);
         String decodedText = new String(decode);
         String[] decodedArray = decodedText.split(":");
 
+        // authenticating username and password in user business service
         UserAuthTokenEntity userAuthToken = userBusinessService.authenticate(decodedArray[0], decodedArray[1]);
         UserEntity user = userAuthToken.getUser();
 
-        SigninResponse signinResponse =
-                new SigninResponse().id(user.getUuid()).message("SIGNED IN SUCCESSFULLY");
+        SigninResponse signinResponse = new SigninResponse().id(user.getUuid()).message("SIGNED IN SUCCESSFULLY");
 
         HttpHeaders headers = new HttpHeaders();
         headers.add("access_token", userAuthToken.getAccessToken());
         return new ResponseEntity<SigninResponse>(signinResponse, headers, HttpStatus.OK);
     }
 
+    /**
+     * User signout endpoint
+     * @param authorization - access token of the signed in user
+     * @return ResponseEntity - signout response with status code
+     */
     @RequestMapping(
             method = RequestMethod.POST,
             path = "/user/signout",
             produces = MediaType.APPLICATION_JSON_UTF8_VALUE)
-    public ResponseEntity<SignoutResponse> signout(
-            @RequestHeader("authorization") final String authorization)
+    public ResponseEntity<SignoutResponse> signout(@RequestHeader("authorization") final String authorization)
             throws SignOutRestrictedException {
 
-        UserAuthTokenEntity userAuthEntity;
-        try {
-            String[] bearerAccessToken = authorization.split("Bearer ");
-            userAuthEntity = userBusinessService.signout(bearerAccessToken[1]);
-        } catch(ArrayIndexOutOfBoundsException are) {
-            userAuthEntity = userBusinessService.signout(authorization);
-        }
+        UserAuthTokenEntity userAuthEntity = userBusinessService.signout(authorization);
 
         UserEntity userEntity = userAuthEntity.getUser();
-
         SignoutResponse signoutResponse = new SignoutResponse().id(userEntity.getUuid()).message("SIGNED OUT SUCCESSFULLY");
 
         return new ResponseEntity<SignoutResponse>(signoutResponse, HttpStatus.OK);
