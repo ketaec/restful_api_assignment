@@ -20,6 +20,7 @@ import java.util.List;
 @Service
 public class AnswerBusinessService {
 
+    // autowired all required dao's
     @Autowired
     private UserDao userDao;
 
@@ -34,15 +35,18 @@ public class AnswerBusinessService {
             throws AuthorizationFailedException, InvalidQuestionException {
 
         UserAuthTokenEntity userAuth = userDao.getUserAuthToken(token);
+        // Validate if auth token is null
         if (userAuth == null) {
             throw new AuthorizationFailedException("ATHR-001", "User has not signed in");
         }
 
-        if (userAuth.getLogoutAt() != null && userAuth.getLogoutAt().isAfter(userAuth.getLoginAt())) {
+        // Validate if user is logged out
+        if (userAuth.getLogoutAt() != null) {
             throw new AuthorizationFailedException("ATHR-002", "User is signed out.Sign in first to post an answer");
         }
 
         QuestionEntity questionEntity = questionDao.getQuestionByUuid(questionUuid);
+        // Validate if question available or not
         if (questionEntity == null) {
             throw new InvalidQuestionException("QUES-001", "The question entered is invalid");
         }
@@ -58,20 +62,23 @@ public class AnswerBusinessService {
             throws AuthorizationFailedException, AnswerNotFoundException {
 
         UserAuthTokenEntity userAuth = userDao.getUserAuthToken(token);
+        // Validate if userAuth is available
         if (userAuth == null) {
             throw new AuthorizationFailedException("ATHR-001", "User has not signed in");
         }
 
-        if (userAuth.getLogoutAt() != null && userAuth.getLogoutAt().isAfter(userAuth.getLoginAt())) {
+        // Validate if user logged out
+        if (userAuth.getLogoutAt() != null) {
             throw new AuthorizationFailedException("ATHR-002", "User is signed out.Sign in first to edit the answer");
         }
 
         AnswerEntity answerEntity = answerDao.getAnswerByUuid(answerUuid);
-
+        // Validate if answer is available
         if (answerEntity == null) {
             throw new AnswerNotFoundException("ANS-001", "Entered answer uuid does not exist");
         }
 
+        // Validate if answer owner and accessed owner are same
         if (!answerEntity.getUser().getUuid().equals(userAuth.getUser().getUuid())) {
             throw new AuthorizationFailedException("ATHR-003", "Only the answer owner can edit the answer");
         }
@@ -85,20 +92,22 @@ public class AnswerBusinessService {
             throws AuthorizationFailedException, AnswerNotFoundException {
 
         UserAuthTokenEntity userAuthEntity = userDao.getUserAuthToken(authorization);
-
+        // Validate if user auth is available
         if (userAuthEntity == null) {
             throw new AuthorizationFailedException("ATHR-001", "User has not signed in");
         }
-
+        // Validate if user logged out
         if (userAuthEntity.getLogoutAt() != null) {
             throw new AuthorizationFailedException("ATHR-002", "User is signed out.Sign in first to delete an answer");
         }
 
         AnswerEntity answerEntity = answerDao.getAnswerByUuid(answerUuid);
+        // Validate if requested answer is available
         if (answerEntity == null) {
             throw new AnswerNotFoundException("ANS-001","Entered answer uuid does not exist");
         }
 
+        // Validate if answer owner and accessed user are same
         if(!userAuthEntity.getUser().getUuid().equals(answerEntity.getUser().getUuid())){
             if (userAuthEntity.getUser().getRole().equals("nonadmin")) {
                 throw new AuthorizationFailedException("ATHR-003", "Only the answer owner or admin can delete the answer");

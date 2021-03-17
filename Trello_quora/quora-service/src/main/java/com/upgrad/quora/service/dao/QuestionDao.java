@@ -14,11 +14,13 @@ public class QuestionDao {
     @PersistenceContext
     private EntityManager entityManager;
 
+    // method to create question
     public QuestionEntity createQuestion(QuestionEntity questionEntity) {
         entityManager.persist(questionEntity);
         return questionEntity;
     }
 
+    // method to list all questions
     public List<QuestionEntity> getAllQuestions() {
         try {
             return entityManager.createNamedQuery("allQuestions", QuestionEntity.class).getResultList();
@@ -27,6 +29,7 @@ public class QuestionDao {
         }
     }
 
+    // method to get question using uuid
     public QuestionEntity getQuestionByUuid(final String uuid) {
         try {
             return entityManager.createNamedQuery("questionEntityByUuid", QuestionEntity.class).setParameter("uuid", uuid).getSingleResult();
@@ -35,15 +38,18 @@ public class QuestionDao {
         }
     }
 
+    // method to edit question
     public QuestionEntity editQuestionContent(final QuestionEntity questionEntity) {
         return entityManager.merge(questionEntity);
     }
 
+    // method to delete a question
     public void userQuestionDelete(final String uuid) {
         QuestionEntity questionEntity = getQuestionByUuid(uuid);
         entityManager.remove(questionEntity);
     }
 
+    // method to list all question by user
     public List<QuestionEntity> getAllQuestionsByUser(final String uuid) {
         try {
             return entityManager.createNamedQuery("questionByUserId", QuestionEntity.class).setParameter("uuid", uuid).getResultList();

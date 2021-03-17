@@ -16,6 +16,7 @@ public class AdminBusinessService {
     @Autowired
     private UserDao userDao;
 
+    // This method receives uuid and authorization from user and perform delete operation
     @Transactional(propagation = Propagation.REQUIRED)
     public void userDelete(final String userUuid, final String authorizationToken)
             throws UserNotFoundException, AuthorizationFailedException {
@@ -24,6 +25,8 @@ public class AdminBusinessService {
             throw new AuthorizationFailedException("ATHR-001", "User has not signed in");
         }
         String role = userAuthEntity.getUser().getRole();
+
+        // checking user role is admin or not
         if (role.equals("admin")) {
             if (userAuthEntity.getLogoutAt() != null) {
                 throw new AuthorizationFailedException("ATHR-002", "User is signed out");
