@@ -24,6 +24,7 @@ public class QuestionController {
     @Autowired
     private QuestionBusinessService questionBusinessService;
 
+    // Endpoint to create a questions
     @RequestMapping(
             method = RequestMethod.POST,
             path = "/question/create",
@@ -33,6 +34,8 @@ public class QuestionController {
             final QuestionRequest questionRequest,
             @RequestHeader("authorization") final String authorization)
             throws AuthorizationFailedException {
+
+        String bearerToken = getBearerToken(authorization);
         // Create question entity
         final QuestionEntity questionEntity = new QuestionEntity();
         questionEntity.setContent(questionRequest.getContent());
@@ -40,11 +43,12 @@ public class QuestionController {
         questionEntity.setDate(ZonedDateTime.now());
 
         // Return response with created question entity
-        final QuestionEntity createdQuestionEntity = questionBusinessService.createQuestion(questionEntity, authorization);
+        final QuestionEntity createdQuestionEntity = questionBusinessService.createQuestion(questionEntity, bearerToken);
         QuestionResponse questionResponse = new QuestionResponse().id(createdQuestionEntity.getUuid()).status("QUESTION CREATED");
         return new ResponseEntity<QuestionResponse>(questionResponse, HttpStatus.CREATED);
     }
 
+    // Endpoint to fetch all questions
     @RequestMapping(
             method = RequestMethod.GET,
             path = "/question/all",
@@ -53,8 +57,9 @@ public class QuestionController {
             @RequestHeader("authorization") final String authorization)
             throws AuthorizationFailedException {
 
+        String bearerToken = getBearerToken(authorization);
         // Get all questions
-        List<QuestionEntity> allQuestions = questionBusinessService.getAllQuestions(authorization);
+        List<QuestionEntity> allQuestions = questionBusinessService.getAllQuestions(bearerToken);
 
         // Create response
         List<QuestionDetailsResponse> allQuestionDetailsResponses = new ArrayList<QuestionDetailsResponse>();
@@ -67,6 +72,7 @@ public class QuestionController {
         return new ResponseEntity<List<QuestionDetailsResponse>>(allQuestionDetailsResponses, HttpStatus.OK);
     }
 
+    // Endpoint to edit a question
     @RequestMapping(
             method = RequestMethod.PUT,
             path = "/question/edit/{questionId}",
@@ -78,17 +84,19 @@ public class QuestionController {
             @RequestHeader("authorization") final String authorization)
             throws AuthorizationFailedException, InvalidQuestionException {
 
+        String bearerToken = getBearerToken(authorization);
         // Creating question entity for further update
         QuestionEntity questionEntity = new QuestionEntity();
         questionEntity.setContent(questionEditRequest.getContent());
         questionEntity.setUuid(questionId);
 
         // Return response with updated question entity
-        QuestionEntity updatedQuestionEntity = questionBusinessService.editQuestionContent(questionEntity, authorization);
+        QuestionEntity updatedQuestionEntity = questionBusinessService.editQuestionContent(questionEntity, bearerToken);
         QuestionEditResponse questionEditResponse = new QuestionEditResponse().id(updatedQuestionEntity.getUuid()).status("QUESTION EDITED");
         return new ResponseEntity<QuestionEditResponse>(questionEditResponse, HttpStatus.OK);
     }
 
+    // Endpoint to delete a question
     @RequestMapping(
             method = RequestMethod.DELETE,
             path = "/question/delete/{questionId}",
@@ -98,13 +106,15 @@ public class QuestionController {
             @RequestHeader("authorization") final String authorization)
             throws AuthorizationFailedException, InvalidQuestionException {
 
+        String bearerToken = getBearerToken(authorization);
         // Delete requested question
-        questionBusinessService.userQuestionDelete(questionId, authorization);
+        questionBusinessService.userQuestionDelete(questionId, bearerToken);
 
         QuestionDeleteResponse questionDeleteResponse = new QuestionDeleteResponse().id(questionId).status("QUESTION DELETED");
         return new ResponseEntity<QuestionDeleteResponse>(questionDeleteResponse, HttpStatus.OK);
     }
 
+    // Endpoint to fetch all the questions posted by a specific user
     @RequestMapping(
             method = RequestMethod.GET,
             path = "/question/all/{userId}",
@@ -114,8 +124,9 @@ public class QuestionController {
             @RequestHeader("authorization") final String authorization)
             throws AuthorizationFailedException, UserNotFoundException {
 
+        String bearerToken = getBearerToken(authorization);
         // Get all questions for requested user
-        List<QuestionEntity> allQuestions = questionBusinessService.getAllQuestionsByUser(userId, authorization);
+        List<QuestionEntity> allQuestions = questionBusinessService.getAllQuestionsByUser(userId, bearerToken);
 
         // Create response
         List<QuestionDetailsResponse> allQuestionDetailsResponse = new ArrayList<QuestionDetailsResponse>();
@@ -126,5 +137,16 @@ public class QuestionController {
         }
 
         return new ResponseEntity<List<QuestionDetailsResponse>>(allQuestionDetailsResponse, HttpStatus.FOUND);
+    }
+
+    // method to get bearer token from authorization token
+    public String getBearerToken(String authorization) {
+        String bearerToken;
+        try {
+            bearerToken = authorization.split("Bearer ")[1];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            bearerToken = authorization;
+        }
+        return bearerToken;
     }
 }
