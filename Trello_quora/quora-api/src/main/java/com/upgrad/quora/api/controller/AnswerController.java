@@ -23,6 +23,7 @@ public class AnswerController {
     @Autowired
     private AnswerBusinessService answerBusinessService;
 
+    // Endpoint to create an answer to a particular question
     @RequestMapping(
             method = RequestMethod.POST,
             path = "/question/{questionId}/answer/create",
@@ -34,17 +35,19 @@ public class AnswerController {
             @RequestHeader("authorization") final String authorization)
             throws AuthorizationFailedException, InvalidQuestionException {
 
+        String bearerToken = getBearerToken(authorization);
         // Creating Answer entity for further update
         AnswerEntity answerEntity = new AnswerEntity();
         answerEntity.setAnswer(answerRequest.getAnswer());
         answerEntity.setUuid(UUID.randomUUID().toString());
 
         // Return response with updated Answer entity
-        AnswerEntity createdAnswerEntity = answerBusinessService.createAnswer(questionId, answerEntity, authorization);
+        AnswerEntity createdAnswerEntity = answerBusinessService.createAnswer(questionId, answerEntity, bearerToken);
         AnswerResponse answerResponse = new AnswerResponse().id(createdAnswerEntity.getUuid()).status("ANSWER CREATED");
         return new ResponseEntity<AnswerResponse>(answerResponse, HttpStatus.CREATED);
     }
 
+    // Endpoint to edit an answer
     @RequestMapping(
             path = "/answer/edit/{answerId}",
             consumes = MediaType.APPLICATION_JSON_UTF8_VALUE,
@@ -56,7 +59,9 @@ public class AnswerController {
             final AnswerRequest answerRequest)
             throws AuthorizationFailedException, AnswerNotFoundException {
 
-        answerBusinessService.editAnswer(ansUuid, answerRequest.getAnswer(), authorization);
+        String bearerToken = getBearerToken(authorization);
+        // calling edit answer business logic
+        answerBusinessService.editAnswer(ansUuid, answerRequest.getAnswer(), bearerToken);
         AnswerEditResponse updatedAnswerResponse =
                 new AnswerEditResponse().id(ansUuid).status("ANSWER EDITED");
         return new ResponseEntity<>(updatedAnswerResponse, HttpStatus.OK);
@@ -71,7 +76,9 @@ public class AnswerController {
             @PathVariable("answerId") final String ansUuid)
             throws AuthorizationFailedException, AnswerNotFoundException {
 
-        answerBusinessService.deleteAnswer(ansUuid, authorization);
+        String bearerToken = getBearerToken(authorization);
+        // delete answer
+        answerBusinessService.deleteAnswer(ansUuid, bearerToken);
         AnswerDeleteResponse answerDeleteResponse = new AnswerDeleteResponse().id(ansUuid).status("ANSWER DELETED");
         return new ResponseEntity<AnswerDeleteResponse>(answerDeleteResponse, HttpStatus.OK);
     }
@@ -85,8 +92,9 @@ public class AnswerController {
             @PathVariable("questionId") final String questionId)
             throws AuthorizationFailedException, InvalidQuestionException {
 
+        String bearerToken = getBearerToken(authorization);
         // Get all answers for requested question
-        List<AnswerEntity> allAnswers = answerBusinessService.getAllAnswersToQuestion(questionId, authorization);
+        List<AnswerEntity> allAnswers = answerBusinessService.getAllAnswersToQuestion(questionId, bearerToken);
 
         // Create response
         List<AnswerDetailsResponse> allAnswersResponse = new ArrayList<AnswerDetailsResponse>();
@@ -101,5 +109,16 @@ public class AnswerController {
 
         // Return response
         return new ResponseEntity<List<AnswerDetailsResponse>>(allAnswersResponse, HttpStatus.FOUND);
+    }
+
+    // method to get bearer token from authorization token
+    public String getBearerToken(String authorization) {
+        String bearerToken;
+        try {
+            bearerToken = authorization.split("Bearer ")[1];
+        } catch (ArrayIndexOutOfBoundsException e) {
+            bearerToken = authorization;
+        }
+        return bearerToken;
     }
 }
