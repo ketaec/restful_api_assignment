@@ -136,7 +136,7 @@ public class QuestionController {
             allQuestionDetailsResponse.add(questionDetailsResponse);
         }
 
-        return new ResponseEntity<List<QuestionDetailsResponse>>(allQuestionDetailsResponse, HttpStatus.FOUND);
+        return new ResponseEntity<List<QuestionDetailsResponse>>(allQuestionDetailsResponse, HttpStatus.OK);
     }
 
     // method to get bearer token from authorization token
